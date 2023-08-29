@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {% endblock %}</title>
+    <link rel="stylesheet", href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+  <h1>Construction Cost Estimation Website </h1>
+  <!-- make selection of u.s. states and return the state-->
+  <p>
+    <select id='selectState'>
+      {% for i in range(0,len) %}
+      <option value = {{i}}>{{usStateList[i]}}</option>
+      {%endfor%}
+    </select>
+    <!-- change function instead of click function-->
+    <script>
+      $('#selectState').change(function(){
+        console.log($(this).val())
+        let i = $(this).val()
+        
+        $.ajax({
+          url: '/_findData',
+          data: JSON.stringify({'i': i}, null, '\t'),
+          dataType:'json',
+          type: 'POST',
+          contentType: 'application/json',
+          success: function(response){
+            console.log(response);
+            const rTest=JSON.parse(JSON.stringify(response))
+            document.getElementById('result').innerHTML='mateiral cost index in the above state:' + rTest.material+','+'installation cost index in the above state:' + rTest.installation+','+'average cost index in the above state:' +rTest.average;
+            $('#hiddenM').val(rTest.material);
+            $('#hiddenI').val(rTest.installation);
+            $('#hiddenA').val(rTest.average);
+          },
+          error: function(error){
+            console.log(error);
+          }
+        });
+      })
+    </script>
+    <div>
+      <form>
+        <input type='hidden' name='indexM' id='hiddenM'>
+        <input type='hidden' name='indexI' id='hiddenI'>
+        <input type='hidden' name='indexA' id='hiddenA'>
+        <table>
+          <tr>
+            <td>Material:</td>
+            <td><input type=number step='0.01' name='Material' id='ValueM' value=0></td>
+          </tr>
+          <tr>
+            <td>Installation:</td>
+            <td><input type=number step='0.01' name='Installation' id='ValueI' value=0></td>
+          </tr>          
+          <tr>
+            <td>Average:</td>
+            <td><input type=number step='0.01' name='Average' id='ValueA' value=0></td>
+          </tr>
+          <tr>
+            <td>
+            </td>
+            <td>
+              <input type='button' id='bb1' value='Estimate' onclick="est()">
+            </td>
+          </tr>
+      </table>
+      </form>
+      <script>
+        function est(){
+          $.ajax({
+          url: '/estimation',
+          data: JSON.stringify({'indexM': hiddenM.value, 'indexI': hiddenI.value, 'indexA': hiddenA.value, 'valueM': ValueM.value, 'valueI': ValueI.value, 'valueA': ValueA.value}, null, '\t'),
+          dataType:'json',
+          type: 'POST',
+          contentType: 'application/json',
+          success: function(response){
+            console.log(response);
+            const rEst=JSON.parse(JSON.stringify(response))
+            document.getElementById('resultEst').innerHTML='If consdiering the average cost: total dollar:' + rEst.aveR+','+'If consdiering the material and installation cost: total dollar:'+rEst.mandIR;
+          },
+          error: function(error){
+            console.log(error);
+          }
+          }
+          )
+        }
+      </script>
+    </div>
+    <div id='result'>
+      <h3>
+        Here are the results of index
+      </h3>
+    </div> 
+    <div id='resultEst'>
+      <h3>
+        Here are the results of estimation
+      </h3>
+    </div> 
+  </p>
+  <!-- insert the u.s. state map in index.html -->
+  <iframe class="map", src="/usMap" width="1000" height="600"></iframe>
+  <h3><b style="background-color: lightcoral; color: lightcyan;">
+      Map of Construction Cost Index 
+  </b></h3>
+  <!-- change the map to state maps -->
+</body>
+
+</html>
